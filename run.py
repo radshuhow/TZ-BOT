@@ -8,6 +8,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from config_reader import config
 from handlers import common, tz_form_handler
 
+def _secret_or_str(value):
+    try:
+        return value.get_secret_value()
+    except AttributeError:
+        return value
+
 async def main():
 
     # Настройка логирования
@@ -15,13 +21,13 @@ async def main():
                         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s")
 
     # Инициализация бота
-    bot = Bot(token=config.bot_token.get_secret_value())
+    bot = Bot(token=_secret_or_str(config.bot_token))
 
     # Инициализация клиента MongoDB и хранилища FSM с фолбэком на память
     mongo_client = None
     try:
         mongo_client = AsyncIOMotorClient(
-            config.mongo_dsn.get_secret_value(),
+            _secret_or_str(config.mongo_dsn),
             serverSelectionTimeoutMS=2000,
             socketTimeoutMS=2000,
             connectTimeoutMS=2000,

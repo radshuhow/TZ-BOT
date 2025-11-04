@@ -12,13 +12,13 @@ class Settings(BaseSettings):
     )
 
     # Токен бота
-    bot_token: SecretStr
+    bot_token: SecretStr = Field(..., env=["BOT_TOKEN", "bot_token"])
 
     # Строка подключения к MongoDB
-    mongo_dsn: SecretStr
+    mongo_dsn: SecretStr = Field(..., env=["MONGO_DSN", "DB_URL", "mongo_dsn", "db_url"])
     
     # ID целевого чата для отправки ТЗ
-    target_chat_id: int
+    target_chat_id: int = Field(..., env=["TARGET_CHAT_ID", "target_chat_id"])
 
     # Список ID пользователей, которым разрешен доступ к боту
     # В .env файле должен быть формат: ALLOWED_USERS=123,456
