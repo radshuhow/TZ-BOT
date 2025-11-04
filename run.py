@@ -34,7 +34,7 @@ async def main():
         )
         # Проверяем доступность Mongo
         await mongo_client.admin.command("ping")
-        storage = MongoStorage(mongo_client, db_name="tz_bot_fsm_storage")
+        storage = MongoStorage(mongo_client, db_name=config.mongo_db_name)
         logging.info("FSM storage: MongoDB")
     except Exception as e:
         logging.warning("MongoDB недоступна, переключаюсь на MemoryStorage: %s", e)

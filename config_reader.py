@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     # Строка подключения к MongoDB
     mongo_dsn: SecretStr = Field(..., env=["MONGO_DSN", "DB_URL", "mongo_dsn", "db_url"])
+    # Имя БД для хранения FSM (опционально)
+    mongo_db_name: str = Field(default="tz_bot_fsm_storage", env=["MONGO_DB_NAME", "mongo_db_name"])
     
     # ID целевого чата для отправки ТЗ
     target_chat_id: int = Field(..., env=["TARGET_CHAT_ID", "target_chat_id"])
