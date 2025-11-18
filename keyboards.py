@@ -7,7 +7,7 @@ def get_main_menu() -> ReplyKeyboardMarkup:
     buttons = [
         [KeyboardButton(text="Обычное ТЗ"), KeyboardButton(text="Уник")],
         [KeyboardButton(text="Адапт"), KeyboardButton(text="Рерайт")],
-        [KeyboardButton(text="PWA")]
+        [KeyboardButton(text="ДИЗАЙН КАРТИНОК PWA")]
     ]
     return ReplyKeyboardMarkup(
         keyboard=buttons,
@@ -101,3 +101,28 @@ def get_edit_steps_kb(flow: str) -> InlineKeyboardMarkup:
     if row:
         rows.append(row)
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+def get_next_step_inline_kb() -> InlineKeyboardMarkup:
+    buttons = [
+        [InlineKeyboardButton(text="➡️ Следующий этап", callback_data="next_step")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def get_skip_preferred_creative_kb() -> InlineKeyboardMarkup:
+    buttons = [
+        [InlineKeyboardButton(text="➡️ Следующий этап", callback_data="skip_preferred_creative")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def get_edit_media_kb(flow: str, step_key: str) -> InlineKeyboardMarkup:
+    buttons = [
+        [InlineKeyboardButton(text="🗑 Удалить медиа этого этапа", callback_data=f"delete_media:{flow}:{step_key}")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def get_after_delete_media_kb(flow: str, step_key: str) -> InlineKeyboardMarkup:
+    buttons = [
+        [InlineKeyboardButton(text="📤 Загрузить новое медиа", callback_data=f"reupload_media_hint:{flow}:{step_key}")],
+        [InlineKeyboardButton(text="👀 К предпросмотру ТЗ", callback_data="back_to_preview")],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

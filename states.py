@@ -45,4 +45,5 @@ class PwaTZ(StatesGroup):
     text = State()
 
 class ConfirmSend(StatesGroup):
+    preferred_creative = State()
     waiting = State()

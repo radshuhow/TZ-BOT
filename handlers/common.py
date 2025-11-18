@@ -45,7 +45,7 @@ async def cmd_start_restricted(message: Message):
 
 
 @common_router.message(Command("cancel"))
-@common_router.message(lambda msg: msg.text.lower() == "отмена")
+@common_router.message(lambda msg: msg.text is not None and msg.text.lower() == "отмена")
 async def cmd_cancel(message: Message, state: FSMContext):
     """
     Обработчик отмены FSM-сценария.
