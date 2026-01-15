@@ -657,11 +657,8 @@ async def handle_standard_scenario(message: Message, state: FSMContext, bot: Bot
         "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
         "Примеры:\n"
         "Юрий - @russkishpion\n"
-        "Филипп - @Rhulerr\n"
         "Семен - @supersk\n"
-        "Наиль - @nrtdinv15\n"
-        "Влад - @nevladex\n"
-        "Евгений - @weddtt",
+        "Влад - @nevladex\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
