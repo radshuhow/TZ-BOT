@@ -1092,59 +1092,84 @@ async def on_skip_preferred_creative(callback: CallbackQuery, state: FSMContext)
 
 @tz_router.callback_query(F.data == "confirm_send", AdminFilter(config.allowed_users))
 async def on_confirm_send(callback: CallbackQuery, state: FSMContext, bot: Bot):
-    data = await state.get_data()
-    send_text = _build_send_text(data)
-    if send_text:
-        await bot.send_message(config.target_chat_id, send_text, parse_mode="HTML")
-    media = data.get("media", [])
-    if media:
-        by_step = {}
-        for m in media:
-            step = m.get("step") or "unknown"
-            by_step.setdefault(step, []).append(m)
-        for step, items in by_step.items():
-            label = None
-            flow = data.get("flow")
-            if flow and flow in FLOW_LABELS and step in FLOW_LABELS[flow]:
-                label = FLOW_LABELS[flow][step]
-            header = f"Медиа для этапа: {label or step}"
-            await bot.send_message(config.target_chat_id, header)
-            photos = [m for m in items if m.get("type") == "photo"]
-            videos = [m for m in items if m.get("type") == "video"]
-            grouped = []
-            for m in photos:
-                grouped.append(InputMediaPhoto(media=m["file_id"], caption=m.get("caption")))
-            for m in videos:
-                grouped.append(InputMediaVideo(media=m["file_id"], caption=m.get("caption")))
-            if not grouped:
-                continue
-            if len(grouped) == 1:
-                item = grouped[0]
-                if isinstance(item, InputMediaPhoto):
-                    await bot.send_photo(config.target_chat_id, item.media, caption=item.caption)
-                else:
-                    await bot.send_video(config.target_chat_id, item.media, caption=item.caption)
-            else:
-                batch = []
-                for item in grouped:
-                    batch.append(item)
-                    if len(batch) == 10:
-                        await bot.send_media_group(config.target_chat_id, media=batch)
-                        batch = []
-                if batch:
-                    await bot.send_media_group(config.target_chat_id, media=batch)
-    await state.clear()
+    try:
+        data = await state.get_data()
+        send_text = _build_send_text(data)
 
-    if callback.message:
+        if send_text:
+            try:
+                if len(send_text) <= 4096:
+                    await bot.send_message(config.target_chat_id, send_text, parse_mode="HTML")
+                else:
+                    plain = _strip_html_tags(send_text)
+                    parts = _split_text_for_telegram(plain, max_len=4096)
+                    for part in parts:
+                        await bot.send_message(config.target_chat_id, part)
+            except Exception as e:
+                logging.exception(f"Failed to send TZ text to target chat, falling back to plain text: {e}")
+                plain = _strip_html_tags(send_text)
+                parts = _split_text_for_telegram(plain, max_len=4096)
+                for part in parts:
+                    await bot.send_message(config.target_chat_id, part)
+
+        media = data.get("media", [])
+        if media:
+            by_step = {}
+            for m in media:
+                step = m.get("step") or "unknown"
+                by_step.setdefault(step, []).append(m)
+            for step, items in by_step.items():
+                label = None
+                flow = data.get("flow")
+                if flow and flow in FLOW_LABELS and step in FLOW_LABELS[flow]:
+                    label = FLOW_LABELS[flow][step]
+                header = f"Медиа для этапа: {label or step}"
+                await bot.send_message(config.target_chat_id, header)
+                photos = [m for m in items if m.get("type") == "photo"]
+                videos = [m for m in items if m.get("type") == "video"]
+                grouped = []
+                for m in photos:
+                    grouped.append(InputMediaPhoto(media=m["file_id"], caption=m.get("caption")))
+                for m in videos:
+                    grouped.append(InputMediaVideo(media=m["file_id"], caption=m.get("caption")))
+                if not grouped:
+                    continue
+                if len(grouped) == 1:
+                    item = grouped[0]
+                    if isinstance(item, InputMediaPhoto):
+                        await bot.send_photo(config.target_chat_id, item.media, caption=item.caption)
+                    else:
+                        await bot.send_video(config.target_chat_id, item.media, caption=item.caption)
+                else:
+                    batch = []
+                    for item in grouped:
+                        batch.append(item)
+                        if len(batch) == 10:
+                            await bot.send_media_group(config.target_chat_id, media=batch)
+                            batch = []
+                    if batch:
+                        await bot.send_media_group(config.target_chat_id, media=batch)
+
+        await state.clear()
+
+        if callback.message:
+            try:
+                await callback.message.edit_reply_markup(reply_markup=None)
+            except Exception:
+                pass
+            await callback.message.answer(
+                " ТЗ отправлено!\n\nВы можете создать новое ТЗ.",
+                reply_markup=get_main_menu()
+            )
+    except Exception as e:
+        logging.exception(f"Error while confirming TZ send: {e}")
+        if callback.message:
+            await callback.message.answer("Ошибка при отправке ТЗ. Попробуйте ещё раз.")
+    finally:
         try:
-            await callback.message.edit_reply_markup(reply_markup=None)
+            await callback.answer("Отправлено")
         except Exception:
             pass
-        await callback.message.answer(
-            " ТЗ отправлено!\n\nВы можете создать новое ТЗ.",
-            reply_markup=get_main_menu()
-        )
-    await callback.answer("Отправлено")
 
 @tz_router.callback_query(F.data == "cancel_send", AdminFilter(config.allowed_users))
 async def on_cancel_send(callback: CallbackQuery, state: FSMContext):
