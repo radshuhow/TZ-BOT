@@ -4,6 +4,8 @@ from aiogram.types import Message, CallbackQuery, InputMediaPhoto, InputMediaVid
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hcode, hbold, hitalic
 import logging
+from html import escape as html_escape
+from typing import List
 
 from states import StandardTZ, UniqTZ, AdaptTZ, RewriteTZ, PwaTZ, ConfirmSend
 from keyboards import get_cancel_kb, get_main_menu, get_confirm_inline_kb, get_nav_kb, get_edit_steps_kb, get_next_step_inline_kb, get_edit_media_kb, get_after_delete_media_kb, get_skip_preferred_creative_kb
@@ -18,67 +20,103 @@ tz_router = Router()
 # Вспомогательные функции для форматирования ТЗ
 # -----------------------------------------------------------------------
 
+def _safe_html_value(value) -> str:
+    if value is None:
+        return ""
+    return html_escape(str(value))
+
+def _strip_html_tags(text: str) -> str:
+    if not text:
+        return ""
+    return (
+        text.replace("<b>", "")
+        .replace("</b>", "")
+        .replace("<i>", "")
+        .replace("</i>", "")
+        .replace("<code>", "")
+        .replace("</code>", "")
+    )
+
+def _split_text_for_telegram(text: str, max_len: int = 4096) -> List[str]:
+    if not text:
+        return [""]
+    if len(text) <= max_len:
+        return [text]
+
+    parts: List[str] = []
+    remaining = text
+    while remaining:
+        chunk = remaining[:max_len]
+        cut = chunk.rfind("\n")
+        if cut <= 0:
+            cut = max_len
+        parts.append(remaining[:cut])
+        remaining = remaining[cut:]
+        if remaining.startswith("\n"):
+            remaining = remaining[1:]
+    return parts
+
 def _format_standard_tz(data: dict) -> str:
     return (
         f"📝 {hbold('НОВОЕ ТЗ (Обычное)')}\n\n"
-        f"👤 {hbold('Заказчик:')} {data.get('customer')}\n"
-        f"🎨 {hbold('Предпочитаемый креативщик:')} {data.get('preferred_creative')}\n"
-        f"🌍 {hbold('Гео:')} {data.get('geo')}\n"
-        f"🎯 {hbold('Подход:')} {data.get('approach')}\n"
-        f"📱 {hbold('Прила:')} {data.get('app')}\n"
-        f"🗣️ {hbold('Язык:')} {data.get('language')}\n"
-        f"🔗 {hbold('Референс/исходник:')} {data.get('reference')}\n"
-        f"⭐ {hbold('Селеба:')} {data.get('celebrity')}\n"
-        f"📐 {hbold('Формат крео:')} {data.get('format')}\n"
-        f"🎰 {hbold('Слот(-ы):')} {data.get('slot')}\n"
-        f"💡 {hbold('Футажи/Дополнительно:')} {data.get('extras')}\n\n"
-        f"🧾 {hbold('Сценарий (Текст):')}\n{data.get('scenario')}"
+        f"👤 {hbold('Заказчик:')} {_safe_html_value(data.get('customer'))}\n"
+        f"🎨 {hbold('Предпочитаемый креативщик:')} {_safe_html_value(data.get('preferred_creative'))}\n"
+        f"🌍 {hbold('Гео:')} {_safe_html_value(data.get('geo'))}\n"
+        f"🎯 {hbold('Подход:')} {_safe_html_value(data.get('approach'))}\n"
+        f"📱 {hbold('Прила:')} {_safe_html_value(data.get('app'))}\n"
+        f"🗣️ {hbold('Язык:')} {_safe_html_value(data.get('language'))}\n"
+        f"🔗 {hbold('Референс/исходник:')} {_safe_html_value(data.get('reference'))}\n"
+        f"⭐ {hbold('Селеба:')} {_safe_html_value(data.get('celebrity'))}\n"
+        f"📐 {hbold('Формат крео:')} {_safe_html_value(data.get('format'))}\n"
+        f"🎰 {hbold('Слот(-ы):')} {_safe_html_value(data.get('slot'))}\n"
+        f"💡 {hbold('Футажи/Дополнительно:')} {_safe_html_value(data.get('extras'))}\n\n"
+        f"🧾 {hbold('Сценарий (Текст):')}\n{_safe_html_value(data.get('scenario'))}"
     )
 
 def _format_uniq_tz(data: dict) -> str:
     return (
         f"📝 {hbold('НОВОЕ ТЗ (Уник)')}\n\n"
-        f"👤 {hbold('Заказчик:')} {data.get('customer')}\n"
-        f"🎨 {hbold('Предпочитаемый креативщик:')} {data.get('preferred_creative')}\n"
-        f"🌍 {hbold('Гео:')} {data.get('geo')}\n"
-        f"📱 {hbold('Прила (если заменить):')} {data.get('app')}\n"
-        f"🎬 {hbold('Название креатива:')} {data.get('creative_name')}"
+        f"👤 {hbold('Заказчик:')} {_safe_html_value(data.get('customer'))}\n"
+        f"🎨 {hbold('Предпочитаемый креативщик:')} {_safe_html_value(data.get('preferred_creative'))}\n"
+        f"🌍 {hbold('Гео:')} {_safe_html_value(data.get('geo'))}\n"
+        f"📱 {hbold('Прила (если заменить):')} {_safe_html_value(data.get('app'))}\n"
+        f"🎬 {hbold('Название креатива:')} {_safe_html_value(data.get('creative_name'))}"
     )
 
 def _format_adapt_tz(data: dict) -> str:
     return (
         f"📝 {hbold('НОВОЕ ТЗ (Адапт)')}\n\n"
-        f"👤 {hbold('Заказчик:')} {data.get('customer')}\n"
-        f"🎨 {hbold('Предпочитаемый креативщик:')} {data.get('preferred_creative')}\n"
-        f"🌍 {hbold('Гео:')} {data.get('geo')}\n"
-        f"📱 {hbold('Новая прила:')} {data.get('new_app')}\n"
-        f"🎬 {hbold('Креатив:')} {data.get('creative_name')}"
+        f"👤 {hbold('Заказчик:')} {_safe_html_value(data.get('customer'))}\n"
+        f"🎨 {hbold('Предпочитаемый креативщик:')} {_safe_html_value(data.get('preferred_creative'))}\n"
+        f"🌍 {hbold('Гео:')} {_safe_html_value(data.get('geo'))}\n"
+        f"📱 {hbold('Новая прила:')} {_safe_html_value(data.get('new_app'))}\n"
+        f"🎬 {hbold('Креатив:')} {_safe_html_value(data.get('creative_name'))}"
     )
 
 def _format_rewrite_tz(data: dict) -> str:
     return (
         f"📝 {hbold('НОВОЕ ТЗ (Рерайт)')}\n\n"
-        f"👤 {hbold('Заказчик:')} {data.get('customer')}\n"
-        f"🎨 {hbold('Предпочитаемый креативщик:')} {data.get('preferred_creative')}\n"
-        f"🌍 {hbold('Гео:')} {data.get('geo')}\n"
-        f"🗣️ {hbold('Язык:')} {data.get('language')}\n"
-        f"🎬 {hbold('Креатив (референс):')} {data.get('creative_reference')}\n"
-        f"💡 {hbold('Дополнительно:')} {data.get('additional')}"
+        f"👤 {hbold('Заказчик:')} {_safe_html_value(data.get('customer'))}\n"
+        f"🎨 {hbold('Предпочитаемый креативщик:')} {_safe_html_value(data.get('preferred_creative'))}\n"
+        f"🌍 {hbold('Гео:')} {_safe_html_value(data.get('geo'))}\n"
+        f"🗣️ {hbold('Язык:')} {_safe_html_value(data.get('language'))}\n"
+        f"🎬 {hbold('Креатив (референс):')} {_safe_html_value(data.get('creative_reference'))}\n"
+        f"💡 {hbold('Дополнительно:')} {_safe_html_value(data.get('additional'))}"
     )
 
 def _format_pwa_tz(data: dict) -> str:
     return (
         f"📝 {hbold('НОВОЕ ТЗ (PWA/Прилка)')} \n\n"
-        f"👤 {hbold('Заказчик:')} {data.get('customer')}\n"
-        f"🎨 {hbold('Предпочитаемый креативщик:')} {data.get('preferred_creative')}\n"
-        f"📐 {hbold('Формат:')} {data.get('format')}\n"
-        f"🏷️ {hbold('Бренд Казино:')} {data.get('brand')}\n"
-        f"🧩 {hbold('Лого брендов:')} {data.get('logos')}\n"
-        f"🎰 {hbold('Слот:')} {data.get('slot')}\n"
-        f"🌍 {hbold('Гео:')} {data.get('geo')}\n"
-        f"✨ {hbold('Доп. элементы:')} {data.get('extra_elements')}\n"
-        f"🎁 {hbold('Спец. предложения:')} {data.get('offers')}\n"
-        f"📝 {hbold('Текст на картинке:')} {data.get('text')}"
+        f"👤 {hbold('Заказчик:')} {_safe_html_value(data.get('customer'))}\n"
+        f"🎨 {hbold('Предпочитаемый креативщик:')} {_safe_html_value(data.get('preferred_creative'))}\n"
+        f"📐 {hbold('Формат:')} {_safe_html_value(data.get('format'))}\n"
+        f"🏷️ {hbold('Бренд Казино:')} {_safe_html_value(data.get('brand'))}\n"
+        f"🧩 {hbold('Лого брендов:')} {_safe_html_value(data.get('logos'))}\n"
+        f"🎰 {hbold('Слот:')} {_safe_html_value(data.get('slot'))}\n"
+        f"🌍 {hbold('Гео:')} {_safe_html_value(data.get('geo'))}\n"
+        f"✨ {hbold('Доп. элементы:')} {_safe_html_value(data.get('extra_elements'))}\n"
+        f"🎁 {hbold('Спец. предложения:')} {_safe_html_value(data.get('offers'))}\n"
+        f"📝 {hbold('Текст на картинке:')} {_safe_html_value(data.get('text'))}"
     )
 
 def _build_send_text(data: dict) -> str:
@@ -107,7 +145,26 @@ async def _show_preview(message: Message, state: FSMContext):
     await state.update_data(preview=tz_text)
     await state.set_state(ConfirmSend.waiting)
     await message.answer("Предпросмотр ТЗ. Проверьте и подтвердите отправку:", parse_mode="HTML")
-    await message.answer(tz_text, parse_mode="HTML", reply_markup=get_confirm_inline_kb())
+    try:
+        if len(tz_text) <= 4096:
+            await message.answer(tz_text, parse_mode="HTML", reply_markup=get_confirm_inline_kb())
+        else:
+            plain = _strip_html_tags(tz_text)
+            parts = _split_text_for_telegram(plain, max_len=4096)
+            for i, part in enumerate(parts):
+                if i == len(parts) - 1:
+                    await message.answer(part, reply_markup=get_confirm_inline_kb())
+                else:
+                    await message.answer(part)
+    except Exception as e:
+        logging.exception(f"Failed to send TZ preview with HTML, falling back to plain text: {e}")
+        plain = _strip_html_tags(tz_text)
+        parts = _split_text_for_telegram(plain, max_len=4096)
+        for i, part in enumerate(parts):
+            if i == len(parts) - 1:
+                await message.answer(part, reply_markup=get_confirm_inline_kb())
+            else:
+                await message.answer(part)
     media = data.get("media", [])
     if media:
         by_step = {}
@@ -658,7 +715,8 @@ async def handle_standard_scenario(message: Message, state: FSMContext, bot: Bot
         "Примеры:\n"
         "Юрий - @russkishpion\n"
         "Семен - @supersk\n"
-        "Влад - @nevladex\n",
+        "Влад - @nevladex\n"
+        "Ефим - @XFiderson\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -724,8 +782,14 @@ async def handle_uniq_creative(message: Message, state: FSMContext, bot: Bot):
     await state.set_state(ConfirmSend.preferred_creative)
     await message.answer(
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
-        "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.",
+        "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
+        "Примеры:\n"
+        "Юрий - @russkishpion\n"
+        "Семен - @supersk\n"
+        "Влад - @nevladex\n"
+        "Ефим - @XFiderson\n",
         reply_markup=get_skip_preferred_creative_kb(),
+        parse_mode="HTML",
     )
 
 # -----------------------------------------------------------------------
@@ -789,8 +853,14 @@ async def handle_adapt_creative(message: Message, state: FSMContext, bot: Bot):
     await state.set_state(ConfirmSend.preferred_creative)
     await message.answer(
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
-        "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.",
+        "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
+        "Примеры:\n"
+        "Юрий - @russkishpion\n"
+        "Семен - @supersk\n"
+        "Влад - @nevladex\n"
+        "Ефим - @XFiderson\n",
         reply_markup=get_skip_preferred_creative_kb(),
+        parse_mode="HTML",
     )
 
 # -----------------------------------------------------------------------
@@ -866,8 +936,14 @@ async def handle_rewrite_additional(message: Message, state: FSMContext, bot: Bo
     await state.set_state(ConfirmSend.preferred_creative)
     await message.answer(
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
-        "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.",
+        "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
+        "Примеры:\n"
+        "Юрий - @russkishpion\n"
+        "Семен - @supersk\n"
+        "Влад - @nevladex\n"
+        "Ефим - @XFiderson\n",
         reply_markup=get_skip_preferred_creative_kb(),
+        parse_mode="HTML",
     )
 
 # -----------------------------------------------------------------------
@@ -988,8 +1064,14 @@ async def handle_pwa_text(message: Message, state: FSMContext, bot: Bot):
     await state.set_state(ConfirmSend.preferred_creative)
     await message.answer(
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
-        "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.",
+        "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
+        "Примеры:\n"
+        "Юрий - @russkishpion\n"
+        "Семен - @supersk\n"
+        "Влад - @nevladex\n"
+        "Ефим - @XFiderson\n",
         reply_markup=get_skip_preferred_creative_kb(),
+        parse_mode="HTML",
     )
 
 @tz_router.message(ConfirmSend.preferred_creative)
