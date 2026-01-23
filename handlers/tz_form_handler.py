@@ -564,8 +564,22 @@ async def on_next_step(callback: CallbackQuery, state: FSMContext):
 
 @tz_router.message(F.text == "Обычное ТЗ", AdminFilter(config.allowed_users))
 async def start_standard_tz(message: Message, state: FSMContext):
-    await state.set_state(StandardTZ.customer)
     await state.update_data(flow="standard")
+
+    username = message.from_user.username if message.from_user else None
+    if username:
+        await state.update_data(customer=f"@{username}")
+        await state.set_state(StandardTZ.geo)
+        await message.answer(
+            f"Вы начали создание {hbold('Обычного ТЗ')}.\n\n"
+            f"{hbold('Заказчик')}: @{username}\n\n"
+            "Гео:\n\n"
+            f"{hitalic('Пример: Камерун')}",
+            parse_mode="HTML",
+        )
+        return
+
+    await state.set_state(StandardTZ.customer)
     await message.answer(
                          f"Вы начали создание {hbold('Обычного ТЗ')}.\n\n"
                          f"Введите {hbold('Заказчика')}:\n\n"
@@ -727,8 +741,22 @@ async def handle_standard_scenario(message: Message, state: FSMContext, bot: Bot
 
 @tz_router.message(F.text == "Уник", AdminFilter(config.allowed_users))
 async def start_uniq_tz(message: Message, state: FSMContext):
-    await state.set_state(UniqTZ.customer)
     await state.update_data(flow="uniq")
+
+    username = message.from_user.username if message.from_user else None
+    if username:
+        await state.update_data(customer=f"@{username}")
+        await state.set_state(UniqTZ.geo)
+        await message.answer(
+            f"Вы начали создание {hbold('ТЗ на Уник')}.\n\n"
+            f"{hbold('Заказчик')}: @{username}\n\n"
+            "Гео:\n\n"
+            f"{hitalic('Пример: Колумбия')}",
+            parse_mode="HTML",
+        )
+        return
+
+    await state.set_state(UniqTZ.customer)
     await message.answer(
                          f"Вы начали создание {hbold('ТЗ на Уник')}.\n\n"
                          f"Введите {hbold('Заказчика')}:\n\n"
@@ -798,8 +826,22 @@ async def handle_uniq_creative(message: Message, state: FSMContext, bot: Bot):
 
 @tz_router.message(F.text == "Адапт", AdminFilter(config.allowed_users))
 async def start_adapt_tz(message: Message, state: FSMContext):
-    await state.set_state(AdaptTZ.customer)
     await state.update_data(flow="adapt")
+
+    username = message.from_user.username if message.from_user else None
+    if username:
+        await state.update_data(customer=f"@{username}")
+        await state.set_state(AdaptTZ.geo)
+        await message.answer(
+            f"Вы начали создание {hbold('ТЗ на Адапт')}.\n\n"
+            f"{hbold('Заказчик')}: @{username}\n\n"
+            "Гео:\n\n"
+            f"{hitalic('Пример: Аргентина')}",
+            parse_mode="HTML",
+        )
+        return
+
+    await state.set_state(AdaptTZ.customer)
     await message.answer(
                          f"Вы начали создание {hbold('ТЗ на Адапт')}.\n\n"
                          f"Введите {hbold('Заказчика')}:\n\n"
@@ -869,8 +911,22 @@ async def handle_adapt_creative(message: Message, state: FSMContext, bot: Bot):
 
 @tz_router.message(F.text == "Рерайт", AdminFilter(config.allowed_users))
 async def start_rewrite_tz(message: Message, state: FSMContext):
-    await state.set_state(RewriteTZ.customer)
     await state.update_data(flow="rewrite")
+
+    username = message.from_user.username if message.from_user else None
+    if username:
+        await state.update_data(customer=f"@{username}")
+        await state.set_state(RewriteTZ.geo)
+        await message.answer(
+            f"Вы начали создание {hbold('ТЗ на Рерайт')}.\n\n"
+            f"{hbold('Заказчик')}: @{username}\n\n"
+            "Гео:\n\n"
+            f"{hitalic('Пример: Пакистан')}",
+            parse_mode="HTML",
+        )
+        return
+
+    await state.set_state(RewriteTZ.customer)
     await message.answer(
                          f"Вы начали создание {hbold('ТЗ на Рерайт')}.\n\n"
                          f"Введите {hbold('Заказчика')}:\n\n"
@@ -952,8 +1008,22 @@ async def handle_rewrite_additional(message: Message, state: FSMContext, bot: Bo
 
 @tz_router.message(F.text == "ДИЗАЙН КАРТИНОК PWA", AdminFilter(config.allowed_users))
 async def start_pwa_tz(message: Message, state: FSMContext):
-    await state.set_state(PwaTZ.customer)
     await state.update_data(flow="pwa")
+
+    username = message.from_user.username if message.from_user else None
+    if username:
+        await state.update_data(customer=f"@{username}")
+        await state.set_state(PwaTZ.format)
+        await message.answer(
+            f"Вы начали создание {hbold('ТЗ на PWA (Прилку)')}.\n\n"
+            f"{hbold('Заказчик')}: @{username}\n\n"
+            "Формат:\n\n"
+            f"{hitalic('Пример: 1 картинка горизонтальная (1280 х 2880) - ...')}",
+            parse_mode="HTML",
+        )
+        return
+
+    await state.set_state(PwaTZ.customer)
     await message.answer(
                          f"Вы начали создание {hbold('ТЗ на PWA (Прилку)')}.\n\n"
                          f"Введите {hbold('Заказчика')}:\n\n"
