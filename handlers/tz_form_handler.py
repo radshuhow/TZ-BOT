@@ -729,7 +729,7 @@ async def handle_standard_scenario(message: Message, state: FSMContext, bot: Bot
         "Примеры:\n"
         "Юрий - @russkishpion\n"
         "Семен - @supersk\n"
-        "Влад - @nevladex\n"
+        "Влад - @nevladex\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -813,7 +813,7 @@ async def handle_uniq_creative(message: Message, state: FSMContext, bot: Bot):
         "Примеры:\n"
         "Юрий - @russkishpion\n"
         "Семен - @supersk\n"
-        "Влад - @nevladex\n"
+        "Влад - @nevladex\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -897,7 +897,7 @@ async def handle_adapt_creative(message: Message, state: FSMContext, bot: Bot):
         "Примеры:\n"
         "Юрий - @russkishpion\n"
         "Семен - @supersk\n"
-        "Влад - @nevladex\n"
+        "Влад - @nevladex\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -993,7 +993,7 @@ async def handle_rewrite_additional(message: Message, state: FSMContext, bot: Bo
         "Примеры:\n"
         "Юрий - @russkishpion\n"
         "Семен - @supersk\n"
-        "Влад - @nevladex\n"
+        "Влад - @nevladex\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -1134,7 +1134,7 @@ async def handle_pwa_text(message: Message, state: FSMContext, bot: Bot):
         "Примеры:\n"
         "Юрий - @russkishpion\n"
         "Семен - @supersk\n"
-        "Влад - @nevladex\n"
+        "Влад - @nevladex\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
