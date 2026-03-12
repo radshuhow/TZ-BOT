@@ -730,7 +730,6 @@ async def handle_standard_scenario(message: Message, state: FSMContext, bot: Bot
         "Юрий - @russkishpion\n"
         "Семен - @supersk\n"
         "Влад - @nevladex\n"
-        "Алексей - @lainn66\n"
         "Алексей - @gzhib\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
