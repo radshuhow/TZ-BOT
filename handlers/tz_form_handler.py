@@ -727,10 +727,11 @@ async def handle_standard_scenario(message: Message, state: FSMContext, bot: Bot
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
         "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
         "Примеры:\n"
-        "Юрий - @russkishpion\n"
-        "Семен - @supersk\n"
+        "Владимир - @v1va_v1ctor1a\n"
         "Влад - @nevladex\n"
-        "Алексей - @gzhib\n",
+        "Семен - @supersk\n"
+        "Юлия - @wozzardofizz\n"
+        "Сеймур - @seymue\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -812,11 +813,11 @@ async def handle_uniq_creative(message: Message, state: FSMContext, bot: Bot):
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
         "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
         "Примеры:\n"
-        "Юрий - @russkishpion\n"
-        "Семен - @supersk\n"
+        "Владимир - @v1va_v1ctor1a\n"
         "Влад - @nevladex\n"
-        "Алексей - @lainn66\n"
-        "Алексей - @gzhib\n",
+        "Семен - @supersk\n"
+        "Юлия - @wozzardofizz\n"
+        "Сеймур - @seymue\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -898,11 +899,11 @@ async def handle_adapt_creative(message: Message, state: FSMContext, bot: Bot):
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
         "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
         "Примеры:\n"
-        "Юрий - @russkishpion\n"
-        "Семен - @supersk\n"
+        "Владимир - @v1va_v1ctor1a\n"
         "Влад - @nevladex\n"
-        "Алексей - @lainn66\n"
-        "Алексей - @gzhib\n",
+        "Семен - @supersk\n"
+        "Юлия - @wozzardofizz\n"
+        "Сеймур - @seymue\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -996,11 +997,11 @@ async def handle_rewrite_additional(message: Message, state: FSMContext, bot: Bo
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
         "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
         "Примеры:\n"
-        "Юрий - @russkishpion\n"
-        "Семен - @supersk\n"
+        "Владимир - @v1va_v1ctor1a\n"
         "Влад - @nevladex\n"
-        "Алексей - @lainn66\n"
-        "Алексей - @gzhib\n",
+        "Семен - @supersk\n"
+        "Юлия - @wozzardofizz\n"
+        "Сеймур - @seymue\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
@@ -1139,11 +1140,11 @@ async def handle_pwa_text(message: Message, state: FSMContext, bot: Bot):
         "Кто ваш предпочитаемый креативщик для этого ТЗ?\n\n"
         "Вы можете указать имя или @ник из команды. Если не важно — нажмите кнопку 'Следующий этап' ниже.\n\n"
         "Примеры:\n"
-        "Юрий - @russkishpion\n"
-        "Семен - @supersk\n"
+        "Владимир - @v1va_v1ctor1a\n"
         "Влад - @nevladex\n"
-        "Алексей - @lainn66\n"
-        "Алексей - @gzhib\n",
+        "Семен - @supersk\n"
+        "Юлия - @wozzardofizz\n"
+        "Сеймур - @seymue\n",
         reply_markup=get_skip_preferred_creative_kb(),
         parse_mode="HTML",
     )
