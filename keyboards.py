@@ -16,6 +16,18 @@ def get_main_menu() -> ReplyKeyboardMarkup:
         input_field_placeholder="Выберите тип ТЗ для создания"
     )
 
+def get_sent_tz_list_kb(items) -> InlineKeyboardMarkup:
+    rows = []
+    for item in items:
+        data = item.get("data", {})
+        flow = data.get("flow", "ТЗ")
+        customer = data.get("customer", "без заказчика")
+        geo = data.get("geo", "без гео")
+        title = f"#{item['id']} · {flow} · {customer} · {geo}"
+        rows.append([InlineKeyboardButton(text=title[:64], callback_data=f"select_sent_tz:{item['id']}")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 def get_cancel_kb() -> ReplyKeyboardMarkup:
     """
     Возвращает клавиатуру для отмены FSM-сценария.

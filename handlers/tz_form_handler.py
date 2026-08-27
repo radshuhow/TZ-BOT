@@ -8,7 +8,7 @@ from html import escape as html_escape
 from typing import List
 
 from states import StandardTZ, UniqTZ, AdaptTZ, RewriteTZ, PwaTZ, ConfirmSend
-from keyboards import get_cancel_kb, get_main_menu, get_confirm_inline_kb, get_nav_kb, get_edit_steps_kb, get_next_step_inline_kb, get_edit_media_kb, get_after_delete_media_kb, get_skip_preferred_creative_kb
+from keyboards import get_cancel_kb, get_main_menu, get_confirm_inline_kb, get_nav_kb, get_edit_steps_kb, get_next_step_inline_kb, get_edit_media_kb, get_after_delete_media_kb, get_skip_preferred_creative_kb, get_sent_tz_list_kb
 
 from config_reader import config
 from handlers.common import AdminFilter # Импортируем фильтр
@@ -359,19 +359,50 @@ async def on_edit_sent_tz(message: Message, state: FSMContext):
         await message.answer("Не удалось определить пользователя.")
         return
 
-    sent_tz = await sent_tz_store.get(buyer_id)
-    if not sent_tz:
+    items = await sent_tz_store.list(buyer_id)
+    if not items:
         await message.answer(
-            "У вас пока нет отправленного ТЗ, которое можно изменить.",
+            "У вас пока нет отправленных ТЗ, которые можно изменить.",
             reply_markup=get_main_menu(),
         )
         return
 
-    await state.set_data({**sent_tz, "editing_sent_tz": True, "editing": False})
     await message.answer(
-        "Выберите этап уже отправленного ТЗ для изменения:",
-        reply_markup=get_edit_steps_kb(sent_tz["flow"]),
+        "Выберите ТЗ для изменения:",
+        reply_markup=get_sent_tz_list_kb(items),
     )
+
+
+@tz_router.callback_query(F.data.startswith("select_sent_tz:"), AdminFilter(config.allowed_users))
+async def on_select_sent_tz(callback: CallbackQuery, state: FSMContext):
+    buyer_id = callback.from_user.id if callback.from_user else None
+    tz_id = callback.data.split(":", 1)[1]
+    if buyer_id is None or not tz_id:
+        await callback.answer("Некорректный выбор")
+        return
+
+    item = await sent_tz_store.get(buyer_id, tz_id)
+    if not item:
+        await callback.answer("ТЗ не найдено")
+        return
+
+    sent_tz = item["data"]
+    await state.set_data({
+        **sent_tz,
+        "sent_tz_id": tz_id,
+        "editing_sent_tz": True,
+        "editing": False,
+    })
+    if callback.message:
+        try:
+            await callback.message.edit_reply_markup(reply_markup=None)
+        except Exception:
+            pass
+        await callback.message.answer(
+            f"Выбрано ТЗ #{tz_id}. Выберите этап для изменения:",
+            reply_markup=get_edit_steps_kb(sent_tz["flow"]),
+        )
+    await callback.answer(f"Выбрано ТЗ #{tz_id}")
 
 
 @tz_router.message(F.text == "Редактировать ТЗ", AdminFilter(config.allowed_users))
@@ -1252,11 +1283,14 @@ async def on_confirm_send(callback: CallbackQuery, state: FSMContext, bot: Bot):
                         await bot.send_media_group(config.target_chat_id, media=batch)
 
         buyer_id = callback.from_user.id if callback.from_user else None
+        tz_id = data.get("sent_tz_id") if is_editing_sent_tz else None
         if buyer_id is not None:
-            await sent_tz_store.save(
-                buyer_id,
-                {key: value for key, value in data.items() if key not in {"preview", "editing", "editing_sent_tz"}},
-            )
+            saved_data = {
+                key: value
+                for key, value in data.items()
+                if key not in {"preview", "editing", "editing_sent_tz", "sent_tz_id"}
+            }
+            tz_id = await sent_tz_store.save(buyer_id, saved_data, tz_id=tz_id)
 
         if is_editing_sent_tz:
             creator_username = config.creator_username
@@ -1264,7 +1298,7 @@ async def on_confirm_send(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 creator_username = f"@{creator_username}"
             await bot.send_message(
                 config.target_chat_id,
-                f"⚠️ {hbold('ТЗ изменено')}\n"
+                f"⚠️ {hbold(f'ТЗ #{tz_id} изменено')}\n"
                 f"Баер внёс правки. {hbold('Главный креатор:')} {creator_username}\n"
                 "Выше отправлена актуальная версия ТЗ.",
                 parse_mode="HTML",
