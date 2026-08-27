@@ -26,5 +26,8 @@ class Settings(BaseSettings):
     # В .env файле должен быть формат: ALLOWED_USERS=123,456
     allowed_users: List[int] = Field(..., env="ALLOWED_USERS")
 
+    # Telegram username главного креатора для уведомлений об изменениях ТЗ
+    creator_username: str = Field(default="@supersk", env=["CREATOR_USERNAME", "creator_username"])
+
 # Создаем экземпляр настроек, который будет импортироваться в других файлах
 config = Settings()

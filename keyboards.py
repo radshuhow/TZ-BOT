@@ -7,7 +7,8 @@ def get_main_menu() -> ReplyKeyboardMarkup:
     buttons = [
         [KeyboardButton(text="Обычное ТЗ"), KeyboardButton(text="Уник")],
         [KeyboardButton(text="Адапт"), KeyboardButton(text="Рерайт")],
-        [KeyboardButton(text="ДИЗАЙН КАРТИНОК PWA")]
+        [KeyboardButton(text="ДИЗАЙН КАРТИНОК PWA")],
+        [KeyboardButton(text="Изменить отправленное ТЗ")]
     ]
     return ReplyKeyboardMarkup(
         keyboard=buttons,

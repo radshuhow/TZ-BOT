@@ -7,6 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from config_reader import config
 from handlers import common, tz_form_handler
+from sent_tz_store import sent_tz_store
 
 def _secret_or_str(value):
     try:
@@ -35,6 +36,7 @@ async def main():
         # Проверяем доступность Mongo
         await mongo_client.admin.command("ping")
         storage = MongoStorage(mongo_client, db_name=config.mongo_db_name)
+        sent_tz_store.collection = mongo_client[config.mongo_db_name]["sent_tz"]
         logging.info("FSM storage: MongoDB")
     except Exception as e:
         logging.warning("MongoDB недоступна, переключаюсь на MemoryStorage: %s", e)

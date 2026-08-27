@@ -12,6 +12,7 @@ from keyboards import get_cancel_kb, get_main_menu, get_confirm_inline_kb, get_n
 
 from config_reader import config
 from handlers.common import AdminFilter # Импортируем фильтр
+from sent_tz_store import sent_tz_store
 
 # Создаем роутер для FSM
 tz_router = Router()
@@ -350,6 +351,28 @@ async def on_back(message: Message, state: FSMContext):
     cur_val = data.get(prev_key, "—")
     label = FLOW_LABELS[flow][prev_key]
     await message.answer(f"{label}. Текущее значение: {cur_val}\nВведите новое значение:", reply_markup=get_nav_kb())
+
+@tz_router.message(F.text == "Изменить отправленное ТЗ", AdminFilter(config.allowed_users))
+async def on_edit_sent_tz(message: Message, state: FSMContext):
+    buyer_id = message.from_user.id if message.from_user else None
+    if buyer_id is None:
+        await message.answer("Не удалось определить пользователя.")
+        return
+
+    sent_tz = await sent_tz_store.get(buyer_id)
+    if not sent_tz:
+        await message.answer(
+            "У вас пока нет отправленного ТЗ, которое можно изменить.",
+            reply_markup=get_main_menu(),
+        )
+        return
+
+    await state.set_data({**sent_tz, "editing_sent_tz": True, "editing": False})
+    await message.answer(
+        "Выберите этап уже отправленного ТЗ для изменения:",
+        reply_markup=get_edit_steps_kb(sent_tz["flow"]),
+    )
+
 
 @tz_router.message(F.text == "Редактировать ТЗ", AdminFilter(config.allowed_users))
 async def on_edit_any_step(message: Message, state: FSMContext):
@@ -1169,7 +1192,10 @@ async def on_skip_preferred_creative(callback: CallbackQuery, state: FSMContext)
 async def on_confirm_send(callback: CallbackQuery, state: FSMContext, bot: Bot):
     try:
         data = await state.get_data()
+        is_editing_sent_tz = data.get("editing_sent_tz", False)
         send_text = _build_send_text(data)
+        if is_editing_sent_tz:
+            send_text = send_text.replace("НОВОЕ ТЗ", "ИЗМЕНЕНИЕ ТЗ", 1)
 
         if send_text:
             try:
@@ -1224,6 +1250,25 @@ async def on_confirm_send(callback: CallbackQuery, state: FSMContext, bot: Bot):
                             batch = []
                     if batch:
                         await bot.send_media_group(config.target_chat_id, media=batch)
+
+        buyer_id = callback.from_user.id if callback.from_user else None
+        if buyer_id is not None:
+            await sent_tz_store.save(
+                buyer_id,
+                {key: value for key, value in data.items() if key not in {"preview", "editing", "editing_sent_tz"}},
+            )
+
+        if is_editing_sent_tz:
+            creator_username = config.creator_username
+            if not creator_username.startswith("@"):
+                creator_username = f"@{creator_username}"
+            await bot.send_message(
+                config.target_chat_id,
+                f"⚠️ {hbold('ТЗ изменено')}\n"
+                f"Баер внёс правки. {hbold('Главный креатор:')} {creator_username}\n"
+                "Выше отправлена актуальная версия ТЗ.",
+                parse_mode="HTML",
+            )
 
         await state.clear()
 
