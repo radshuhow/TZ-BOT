@@ -2,6 +2,7 @@ from aiogram import Router
 from aiogram.filters import CommandStart, Command, BaseFilter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
+from time import time
 from typing import List
 
 from keyboards import get_main_menu
@@ -49,6 +50,41 @@ def _is_main_creator(message: Message) -> bool:
     creator_username = (config.creator_username or "").lstrip("@").lower()
     username = (message.from_user.username if message.from_user else "") or ""
     return bool(creator_username and username.lower() == creator_username)
+
+
+TZ_FLOW_LABELS = {
+    "standard": "Обычное ТЗ",
+    "uniq": "Уник",
+    "adapt": "Адапт",
+    "rewrite": "Рерайт",
+    "pwa": "Дизайн картинок PWA",
+    "unknown": "Неизвестный тип",
+}
+
+
+@common_router.message(Command("stats_week"))
+@common_router.message(Command("weekly_stats"))
+async def weekly_stats(message: Message):
+    """Show newly created TZ counts for the last seven days."""
+    if not _is_main_creator(message):
+        await message.answer("❌ Эта команда доступна только главному креатору.")
+        return
+
+    stats = await sent_tz_store.weekly_stats(time() - 7 * 24 * 60 * 60)
+    if not stats:
+        await message.answer("За последние 7 дней новых ТЗ не отправляли.")
+        return
+
+    lines = ["📊 Новые ТЗ за последние 7 дней:\n"]
+    total = 0
+    for buyer_stats in stats:
+        lines.append(f"👤 {buyer_stats['buyer_label']} (ID {buyer_stats['buyer_id']})")
+        for flow, count in sorted(buyer_stats["flows"].items()):
+            lines.append(f"— {TZ_FLOW_LABELS.get(flow, flow)}: {count}")
+        lines.append(f"Всего: {buyer_stats['total']}\n")
+        total += buyer_stats["total"]
+    lines.append(f"Итого новых ТЗ: {total}")
+    await message.answer("\n".join(lines))
 
 
 @common_router.message(Command("tz"))

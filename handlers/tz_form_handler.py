@@ -1236,7 +1236,18 @@ async def on_confirm_send(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 for key, value in data.items()
                 if key not in {"preview", "editing", "editing_sent_tz", "sent_tz_id"}
             }
-            tz_id = await sent_tz_store.save(buyer_id, saved_data, tz_id=tz_id)
+            buyer = callback.from_user
+            buyer_label = (
+                f"@{buyer.username}"
+                if buyer and buyer.username
+                else (buyer.full_name if buyer else f"ID {buyer_id}")
+            )
+            tz_id = await sent_tz_store.save(
+                buyer_id,
+                saved_data,
+                tz_id=tz_id,
+                buyer_label=buyer_label,
+            )
             send_text = f"🆔 {hbold(f'ID ТЗ: #{tz_id}')}\n\n{send_text}"
 
         if send_text:
