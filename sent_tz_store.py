@@ -29,6 +29,23 @@ class SentTZStore:
                 return item
         return None
 
+    async def get_by_id(self, tz_id: str) -> Optional[Dict[str, Any]]:
+        """Find a saved TZ by ID across all buyers."""
+        for items in self._memory.values():
+            for item in items:
+                if item.get("id") == tz_id:
+                    return item
+
+        if self.collection is not None:
+            async for record in self.collection.find({}):
+                items = record.get("items") or []
+                if not items and record.get("data"):
+                    items = [{"id": "legacy", "created_at": 0, "data": record["data"]}]
+                for item in items:
+                    if item.get("id") == tz_id:
+                        return item
+        return None
+
     async def save(self, buyer_id: int, data: Dict[str, Any], tz_id: Optional[str] = None) -> str:
         items = await self.list(buyer_id)
         now = time()

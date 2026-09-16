@@ -1228,6 +1228,17 @@ async def on_confirm_send(callback: CallbackQuery, state: FSMContext, bot: Bot):
         if is_editing_sent_tz:
             send_text = send_text.replace("НОВОЕ ТЗ", "ИЗМЕНЕНИЕ ТЗ", 1)
 
+        buyer_id = callback.from_user.id if callback.from_user else None
+        tz_id = data.get("sent_tz_id") if is_editing_sent_tz else None
+        if buyer_id is not None:
+            saved_data = {
+                key: value
+                for key, value in data.items()
+                if key not in {"preview", "editing", "editing_sent_tz", "sent_tz_id"}
+            }
+            tz_id = await sent_tz_store.save(buyer_id, saved_data, tz_id=tz_id)
+            send_text = f"🆔 {hbold(f'ID ТЗ: #{tz_id}')}\n\n{send_text}"
+
         if send_text:
             try:
                 if len(send_text) <= 4096:
@@ -1281,16 +1292,6 @@ async def on_confirm_send(callback: CallbackQuery, state: FSMContext, bot: Bot):
                             batch = []
                     if batch:
                         await bot.send_media_group(config.target_chat_id, media=batch)
-
-        buyer_id = callback.from_user.id if callback.from_user else None
-        tz_id = data.get("sent_tz_id") if is_editing_sent_tz else None
-        if buyer_id is not None:
-            saved_data = {
-                key: value
-                for key, value in data.items()
-                if key not in {"preview", "editing", "editing_sent_tz", "sent_tz_id"}
-            }
-            tz_id = await sent_tz_store.save(buyer_id, saved_data, tz_id=tz_id)
 
         if is_editing_sent_tz:
             creator_username = config.creator_username
